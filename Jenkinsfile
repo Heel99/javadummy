@@ -1,27 +1,37 @@
-node(){
+pipeline {
 
-	def sonarHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-	
-	stage('Code Checkout'){
-		checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'GitHubCreds', url: 'https://github.com/anujdevopslearn/MavenBuild']])
-	}
-	stage('Build Automation'){
-		sh """
-			ls -lart
-			mvn clean install
-			ls -lart target
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-		"""
-	}
-	
-	stage('Code Scan'){
-		withSonarQubeEnv(credentialsId: 'SonarQubeCreds') {
-			sh "${sonarHome}/bin/sonar-scanner"
-		}
-		
-	}
-	
-	stage('Code Deployment'){
-		deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://54.197.62.94:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
-	}
+        stage('Build') {
+            steps {
+                sh "mvn clean install -Dmaven.test.skip=true"
+            }
+        }
+	     stage('Test case execution') {
+                sh "mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -pcoverage-per-test"
+        }
+
+        stage('archive artifacts') {
+                archiveArtifacts artifacts: 'target/*.war'
+        }
+	      stage('Deployement') {
+                deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://54.197.62.94:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+        }
+	 
+    }
+
+    post {
+        success {
+            echo "Deployment successful! Access your application at http://your-tomcat-server:8080/${APP_NAME}"
+        }
+
+        failure {
+            echo "Deployment failed! Check the logs for more details."
+        }
+    }
 }
