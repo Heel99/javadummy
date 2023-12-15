@@ -20,7 +20,7 @@ pipeline {
                 archiveArtifacts artifacts: 'target/*.war'
         }
 	      stage('Deployement') {
-                deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://54.197.62.94:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+                deploy adapters: [tomcat9(credentialsId: 'TomcatCred', path: '', url: 'http://18.208.214.69:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
         }
 	 
     }
