@@ -27,7 +27,7 @@ pipeline {
 
     post {
         success {
-            echo "Deployment successful! Access your application at http://your-tomcat-server:8080/${APP_NAME}"
+            echo "Deployment successful! Access your application at http://your-tomcat-server:8080/Planview"
         }
 
         failure {
