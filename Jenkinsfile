@@ -1,4 +1,5 @@
 pipeline {
+    agent any
 
     stages {
         stage('Checkout') {
@@ -9,20 +10,33 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh "mvn clean install -Dmaven.test.skip=true"
+                script {
+                    sh "mvn clean install -Dmaven.test.skip=true"
+                }
             }
         }
-	     stage('Test case execution') {
-                sh "mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -pcoverage-per-test"
+
+        stage('Test case execution') {
+            steps {
+                script {
+                    sh "mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -Pcoverage-per-test"
+                }
+            }
         }
 
         stage('archive artifacts') {
+            steps {
                 archiveArtifacts artifacts: 'target/*.war'
+            }
         }
-	      stage('Deployement') {
-                deploy adapters: [tomcat9(credentialsId: 'TomcatCred', path: '', url: 'http://18.208.214.69:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+
+        stage('Deployment') {
+            steps {
+                script {
+                    deploy adapters: [tomcat9(credentialsId: 'TomcatCred', path: '', url: 'http://18.208.214.69:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+                }
+            }
         }
-	 
     }
 
     post {
